@@ -84,7 +84,10 @@ def get_table_schema():
 
 def chat_with_ai(user_message, conversation_history):
     """Send message to Claude, let it write SQL, run it, and explain the result."""
-    schema = get_table_schema()
+    try:
+        schema = get_table_schema()
+    except Exception as e:
+        return f"Error: could not connect to the database: {e}", None, None
     if not schema:
         return "Error: could not read the customers table schema.", None, None
     schema_text = "\n".join(f"- {c['column_name']}: {c['data_type']}" for c in schema)
@@ -154,11 +157,15 @@ HTML_TEMPLATE = """
       e.preventDefault();
       const message = input.value.trim(); if (!message) return;
       add(message, "user"); input.value = "";
-      const res = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, history }) });
-      const data = await res.json();
-      if (data.sql_query) { const s = document.createElement("div"); s.className = "sql"; s.textContent = "SQL: " + data.sql_query; chat.appendChild(s); }
-      add(data.response || data.error || "Error", "bot");
-      history = data.history || history;
+      try {
+        const res = await fetch("/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, history }) });
+        const data = await res.json();
+        if (data.sql_query) { const s = document.createElement("div"); s.className = "sql"; s.textContent = "SQL: " + data.sql_query; chat.appendChild(s); }
+        add(data.response || data.error || "Error", "bot");
+        history = data.history || history;
+      } catch (err) {
+        add("Request failed: " + err.message, "bot");
+      }
     });
   </script>
 </body>
@@ -185,3 +192,9 @@ def chat():
 if __name__ == '__main__':
     init_db()
     app.run(debug=True, port=5000)
+else:
+    # On serverless hosts (Vercel) the module is imported, not run as __main__.
+    try:
+        init_db()
+    except Exception as e:
+        print(f"init_db skipped: {e}")

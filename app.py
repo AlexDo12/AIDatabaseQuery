@@ -64,7 +64,8 @@ def query_database(query):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(query)
-    results = cur.fetchall()
+    results = cur.fetchall() if cur.description else []
+    conn.commit()
     cur.close()
     conn.close()
     return results

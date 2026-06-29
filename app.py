@@ -100,7 +100,7 @@ Table '{TABLE_NAME}' columns:
 
 WORKFLOW:
 - When you need data, reply with a line: SQL_QUERY: <one query>
-- Use PostgreSQL syntax.
+- Use PostgreSQL syntax. End the query with a semicolon.
 """
 
     messages = conversation_history + [{"role": "user", "content": user_message}]
@@ -111,8 +111,9 @@ WORKFLOW:
 
     if "SQL_QUERY:" in assistant_message:
         start = assistant_message.find("SQL_QUERY:") + len("SQL_QUERY:")
-        end = assistant_message.find("\n", start)
-        sql_query = assistant_message[start:(end if end != -1 else len(assistant_message))].strip()
+        rest = assistant_message[start:]
+        semicolon = rest.find(";")
+        sql_query = (rest[:semicolon + 1] if semicolon != -1 else rest).strip()
         try:
             results = query_database(sql_query)
         except Exception as e:

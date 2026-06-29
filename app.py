@@ -25,7 +25,7 @@ TABLE_NAME = 'customers'
 
 # Initialize Anthropic client
 client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
-MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514")
+MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5-20251001")
 
 
 def get_db_connection():
